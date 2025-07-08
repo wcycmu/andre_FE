@@ -399,15 +399,38 @@ const Nav: FC<{ currentPage: string }> = ({ currentPage }) => {
 };
 
 // --- MAIN APP COMPONENT ---
+
+// Helper to get the current page from the URL hash.
+const getCurrentPage = () => {
+    // Default to '/upload' if hash is empty, '#', or just '/'
+    if (!window.location.hash || window.location.hash === '#' || window.location.hash === '#/') {
+        return '/upload';
+    }
+    // Return the path part of the hash (e.g., #/dashboard -> /dashboard)
+    return window.location.hash.slice(1);
+};
+
 const App: FC = () => {
-    const [page, setPage] = useState('/upload');
+    const [page, setPage] = useState(getCurrentPage());
     const [transactions, setTransactions] = useState<Transaction[] | null>(null);
     const [sentiment, setSentiment] = useState('');
     const [stockData, setStockData] = useState<StockData[] | null>(null);
     const [news, setNews] = useState<NewsHeadline[] | null>(null);
     const [analysis, setAnalysis] = useState<Recommendation[] | null>(null);
 
-    const navigate = (newPage: string) => setPage(newPage);
+    // Effect to handle browser navigation (back/forward buttons) by listening to hash changes.
+    useEffect(() => {
+        const handleHashChange = () => {
+            setPage(getCurrentPage());
+        };
+        window.addEventListener('hashchange', handleHashChange);
+        return () => window.removeEventListener('hashchange', handleHashChange);
+    }, []); // Empty dependency array ensures this runs only once on mount.
+
+    // Navigation function now updates the URL hash.
+    const navigate = (newPage: string) => {
+        window.location.hash = `#${newPage}`;
+    };
 
     const logout = () => {
         setTransactions(null);
@@ -438,9 +461,11 @@ const App: FC = () => {
         }
     };
     
+    const isUploadPage = page === '/upload';
+
     return (
         <AppContext.Provider value={contextValue}>
-            {page === '/upload' ? (
+            {isUploadPage ? (
                 <UploadPage />
             ) : (
                 <div className="flex h-full">
