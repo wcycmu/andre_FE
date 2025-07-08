@@ -1,0 +1,52 @@
+# .github/workflows/deploy.yml
+
+# 1. Workflow Name: Sets the name that appears in the "Actions" tab of your GitHub repository.
+name: Deploy to GitHub Pages
+
+# 2. Trigger: This section defines when the workflow should automatically run.
+on:
+  # 3. Runs on pushes to the 'main' branch.
+  push:
+    branches:
+      - main
+  # 4. Allows you to also run this workflow manually from the Actions tab.
+  workflow_dispatch:
+
+# 5. Permissions: Grants the necessary permissions to the GITHUB_TOKEN for this job.
+permissions:
+  contents: read # 6. Required to check out your repository's code.
+  pages: write    # 7. Required to write the built site to the GitHub Pages branch.
+  id-token: write # 8. Required for authentication with GitHub Pages.
+
+# 9. Job Definition: Defines the sequence of tasks to be executed.
+jobs:
+  # 10. Job ID: A unique identifier for this job.
+  deploy:
+    # 11. Environment: Configures the job to use the GitHub Pages deployment environment.
+    environment:
+      name: github-pages
+      # 12. URL: Specifies the URL where the site will be deployed. GitHub automatically populates this.
+      url: ${{ steps.deployment.outputs.page_url }}
+    # 13. Runner: Specifies the type of virtual machine to run the job on.
+    runs-on: ubuntu-latest
+    # 14. Steps: A sequence of tasks that make up the 'deploy' job.
+    steps:
+      # 15. Step 1: Checks out your repository code so the workflow can access it.
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      # 16. Step 2: Sets up the GitHub Pages environment.
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+        
+      # 17. Step 3: Packages all your project files into a 'deployment artifact'.
+      #    The 'path' is set to '.' because your index.html is in the root directory.
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
+          
+      # 18. Step 4: Takes the artifact from the previous step and deploys it to GitHub Pages.
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
